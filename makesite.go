@@ -67,21 +67,6 @@ func createHTMLFile(buffer, filename string) bool {
 	return true
 }
 
-// helper function, help from Audi
-func flagCheck(name string) bool {
-	check := false
-	fmt.Println(name)
-	flag.Visit(func(f *flag.Flag) {
-		fmt.Println(f)
-
-		if f.Name == name {
-			check = true
-		}
-	})
-
-	return check
-}
-
 func main() {
 	// dir, fileName := flagParse()
 
