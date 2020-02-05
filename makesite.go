@@ -1,9 +1,13 @@
 package main
 
 import (
-	"html/template"
+	"bytes"
+	"flag"
+	"fmt"
 	"io/ioutil"
-	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
 )
 
 type blogEntry struct {
@@ -32,26 +36,80 @@ type data struct {
 	Content string
 }
 
-func writeHTMLFile(file string) {
-	s := data{}
-	s.Content = string(file)
-	paths := []string{
-		"template.tmpl",
-	}
-
-	tmpl := template.Must(template.New("template.tmpl").ParseFiles(paths...))
-	err := tmpl.Execute(os.Stdout, s)
+func check(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 
+func writeHTMLFile(fileContent string) string {
+	paths := []string{
+		"template.tmpl",
+	}
+
+	buffer := new(bytes.Buffer)
+
+	Data := data{string(fileContent)}
+
+	tmpl := template.Must(template.New("template.tmpl").ParseFiles(paths...))
+
+	err := tmpl.Execute(buffer, Data)
+	check(err)
+
+	return buffer.String()
+}
+
+func createHTMLFile(buffer, filename string) bool {
+	bytesToWrite := []byte(buffer)
+	err := ioutil.WriteFile(filename, bytesToWrite, 0644)
+	check(err)
+
+	return true
+}
+
+// helper function, help from Audi
+func flagCheck(name string) bool {
+	check := false
+	fmt.Println(name)
+	flag.Visit(func(f *flag.Flag) {
+		fmt.Println(f)
+
+		if f.Name == name {
+			check = true
+		}
+	})
+
+	return check
+}
+
 func main() {
+	// dir, fileName := flagParse()
 
-	FileContent := readFile("template.tmpl")
+	dir := flag.String("dir", ".", "Name of the directory to save the File")
+	fileName := flag.String("file", "first-post.txt", "name of file to write to html")
 
-	error := ioutil.WriteFile("first-post.html", FileContent, 0644)
-	if error != nil {
-		panic(error)
+	flag.Parse()
+
+	if flag.Args()[0] == *dir {
+		allFiles, err := ioutil.ReadDir(*dir)
+		check(err)
+
+		for _, file := range allFiles {
+			if filepath.Ext(file.Name()) == ".txt" {
+				fileContent := readFile(file.Name())
+
+				buffer := writeHTMLFile(string(fileContent))
+
+				fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
+
+				createHTMLFile(buffer, fileName)
+			}
+		}
+	} else {
+		fileContent := readFile(*fileName)
+		fmt.Println("asga")
+		buffer := writeHTMLFile(string(fileContent))
+		fileName := strings.SplitN(*fileName, ".", 2)[0] + ".html"
+		createHTMLFile(buffer, fileName)
 	}
 }

@@ -53,7 +53,7 @@ If you get stuck on any step, be sure to print the output to `stdout`!
 - [x] Render the contents of `first-post.txt` using Go Templates.
 - [x] Write the HTML template to the filesystem to a file. Name it `first-post.html`.
 - [x] Manually test the generated HTML page by double-clicking the `first-post.html` and opening it in your browser.
-- [ ] Add, commit, and push to GitHub.
+- [x] Add, commit, and push to GitHub.
 - [ ] Add an argument to your CLI command: the name of any `.txt` file in the same directory as your program. Use `latest-post.txt` to test.
 - [ ] Update the `save` function to use the input filename to generate a new HTML file. For example, if the input file is named `latest-post.txt`, the generated HTML file should be named `latest-post.html`.
 - [ ] Add, commit, and push to GitHub.
