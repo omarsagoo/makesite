@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -75,7 +76,7 @@ func main() {
 
 	flag.Parse()
 
-	if flag.Args()[0] == *dir {
+	if _, err := os.Stat(*dir); os.IsNotExist(err) == false {
 		allFiles, err := ioutil.ReadDir(*dir)
 		check(err)
 
