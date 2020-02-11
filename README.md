@@ -58,6 +58,15 @@ If you get stuck on any step, be sure to print the output to `stdout`!
 - [x] Update the `save` function to use the input filename to generate a new HTML file. For example, if the input file is named `latest-post.txt`, the generated HTML file should be named `latest-post.html`.
 - [x] Add, commit, and push to GitHub.
 
+
+### v1.1 Requirements
+ - [] Create 3 new .txt files for testing in the same directory as your project.
+ - [x] Add a new flag to the makesite command named dir.
+ - [x] Use the flag to find all .txt files in the given directory. Print them to stdout.
+ - [x] With the list of .txt files you found, generate an HTML page for each.
+ - [x] Run ./makesite --dir=. to test in your local directory.
+ - [x] Add, commit, and push to GitHub.
+
 #### Stretch Challenges
 
 - [ ] Use Bootstrap, or another CSS framework, to enhance the style and readability of your template. _Get creative! Writing your very own website generator is a great opportunity to broadcast your style, personality, and development preferences to the world!_
