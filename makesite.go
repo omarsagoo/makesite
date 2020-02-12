@@ -22,6 +22,8 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+var numOfPages int
+
 type blogEntry struct {
 	title   string
 	content string
@@ -68,10 +70,6 @@ func check(err error) {
 }
 
 func writeHTMLFile(fileContent string) string {
-	// paths := []string{
-	// 	"template.tmpl",
-	// }
-
 	buffer := new(bytes.Buffer)
 
 	Data := data{Content: template.HTML(fileContent)}
@@ -86,6 +84,7 @@ func writeHTMLFile(fileContent string) string {
 }
 
 func createHTMLFile(buffer, filename string) {
+	numOfPages = numOfPages + 1
 	bytesToWrite := []byte(buffer)
 	dir := "./html_SSG_files/"
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -96,8 +95,7 @@ func createHTMLFile(buffer, filename string) {
 	check(err)
 }
 
-func makeMultipleHTMLfile(dir, lang string) (int, float64) {
-	var numOfPages int
+func makeMultipleHTMLfile(dir, lang string) float64 {
 	var fileSizes float64
 
 	allFiles, err := ioutil.ReadDir(dir)
@@ -106,7 +104,7 @@ func makeMultipleHTMLfile(dir, lang string) (int, float64) {
 	for _, file := range allFiles {
 		if file.IsDir() {
 			// recursive check for subdirectories
-			return makeMultipleHTMLfile(dir+"/"+file.Name(), lang)
+			makeMultipleHTMLfile(dir+"/"+file.Name(), lang)
 		}
 
 		if filepath.Ext(file.Name()) == ".txt" {
@@ -123,7 +121,6 @@ func makeMultipleHTMLfile(dir, lang string) (int, float64) {
 			createHTMLFile(buffer, fileName)
 
 			fileSizes += float64(file.Size()) / float64(bytesize.KB)
-			numOfPages = numOfPages + 1
 		} else if filepath.Ext(file.Name()) == ".md" {
 			extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 			p := parser.NewWithExtensions(extensions)
@@ -147,15 +144,14 @@ func makeMultipleHTMLfile(dir, lang string) (int, float64) {
 			createHTMLFile(buffer, fileName)
 
 			fileSizes += float64(file.Size()) / float64(bytesize.KB)
-			numOfPages = numOfPages + 1
+
 		}
 	}
-	return numOfPages, fileSizes
+	return fileSizes
 }
 
-func makeHTMLFile(fileName, lang string) (int, float64) {
+func makeHTMLFile(fileName, lang string) float64 {
 	var fileSizes float64
-	var numOfPages int
 
 	file, err := os.Lstat(fileName)
 	check(err)
@@ -183,9 +179,7 @@ func makeHTMLFile(fileName, lang string) (int, float64) {
 
 		createHTMLFile(buffer, fileName)
 
-		numOfPages = numOfPages + 1
-
-		return numOfPages, fileSizes
+		return fileSizes
 	}
 
 	buffer := writeHTMLFile(translatedFileContent)
@@ -194,9 +188,7 @@ func makeHTMLFile(fileName, lang string) (int, float64) {
 
 	createHTMLFile(buffer, fileName)
 
-	numOfPages = numOfPages + 1
-
-	return numOfPages, fileSizes
+	return fileSizes
 }
 
 func main() {
@@ -204,7 +196,6 @@ func main() {
 	var dir string
 	var fileName string
 	var lang string
-	var numOfPages int
 	var fileSizes float64
 
 	flag.StringVar(&dir, "dir", "", "Name of the directory to grab and save the File")
@@ -214,9 +205,9 @@ func main() {
 	flag.Parse()
 
 	if dir != "" {
-		numOfPages, fileSizes = makeMultipleHTMLfile(dir, lang)
+		fileSizes = makeMultipleHTMLfile(dir, lang)
 	} else if fileName != "" {
-		numOfPages, fileSizes = makeHTMLFile(fileName, lang)
+		fileSizes = makeHTMLFile(fileName, lang)
 	} else if fileName == "" && dir == "" {
 		fmt.Printf("%s You must provide either a directory or a file!\n", color.Danger.Render("ERROR:"))
 		return
