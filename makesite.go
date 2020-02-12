@@ -27,12 +27,6 @@ type allBlog struct {
 	List []blogEntry
 }
 
-//
-func timeTrack(start time.Time) time.Duration {
-	elapsed := time.Since(start)
-	return elapsed
-}
-
 // Google API Golang snippet
 func translateText(targetLanguage, text string) (string, error) {
 	// text := "The Go Gopher is cute"
@@ -57,19 +51,6 @@ func translateText(targetLanguage, text string) (string, error) {
 		return "", fmt.Errorf("Translate returned empty response to text: %s", text)
 	}
 	return resp[0].Text, nil
-}
-
-func readFile(file string) []byte {
-	fileContents, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	// for i := 0; string(fileContents[i]) != "\n"; i++ {
-	// 	if string(fileContents[i+1]) == "\n" {
-	// 		title = string(fileContents[:i+1])
-	// 	}
-	// }
-	return fileContents
 }
 
 type data struct {
@@ -99,50 +80,101 @@ func writeHTMLFile(fileContent string) string {
 	return buffer.String()
 }
 
-func createHTMLFile(buffer, filename string) bool {
+func createHTMLFile(buffer, filename string) {
 	bytesToWrite := []byte(buffer)
-	err := ioutil.WriteFile(filename, bytesToWrite, 0644)
+	dir := "./html_SSG_files/"
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.Mkdir(dir, 0777)
+		check(err)
+	}
+	err := ioutil.WriteFile(dir+filename, bytesToWrite, 0644)
+	check(err)
+}
+
+func makeMultipleHTMLfile(dir, lang string) (int, float64) {
+	var numOfPages int
+	var fileSizes float64
+
+	allFiles, err := ioutil.ReadDir(dir)
 	check(err)
 
-	return true
+	for _, file := range allFiles {
+		if file.IsDir() {
+			// recursive check for subdirectories
+			return makeMultipleHTMLfile(dir+"/"+file.Name(), lang)
+		}
+
+		if filepath.Ext(file.Name()) == ".txt" {
+			fileContent, err := ioutil.ReadFile(dir + "/" + file.Name())
+			check(err)
+
+			translatedFileContent, err := translateText(lang, string(fileContent))
+			check(err)
+
+			buffer := writeHTMLFile(translatedFileContent)
+
+			fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
+
+			createHTMLFile(buffer, fileName)
+
+			fileSizes += float64(file.Size()) / float64(bytesize.KB)
+			numOfPages = numOfPages + 1
+		}
+	}
+	return numOfPages, fileSizes
+}
+
+func makeHTMLFile(fileName, lang string) (int, float64) {
+	var fileSizes float64
+	var numOfPages int
+
+	file, err := os.Lstat(fileName)
+	check(err)
+
+	fileContent, err := ioutil.ReadFile(file.Name())
+	check(err)
+
+	fileSizes += float64(file.Size()) / float64(bytesize.KB)
+
+	translatedFileContent, err := translateText(lang, string(fileContent))
+	check(err)
+
+	buffer := writeHTMLFile(translatedFileContent)
+
+	fileName = strings.SplitN(fileName, ".", 2)[0] + ".html"
+
+	createHTMLFile(buffer, fileName)
+
+	numOfPages = numOfPages + 1
+
+	return numOfPages, fileSizes
 }
 
 func main() {
-	// dir, fileName := flagParse()
 	start := time.Now()
+	var dir string
+	var fileName string
+	var lang string
+	var numOfPages int
+	var fileSizes float64
 
-	dir := flag.String("dir", ".", "Name of the directory to save the File")
-	fileName := flag.String("file", "first-post.txt", "name of file to write to html")
+	flag.StringVar(&dir, "dir", "", "Name of the directory to grab and save the File")
+	flag.StringVar(&fileName, "file", "", "name of file to write to html")
+	flag.StringVar(&lang, "lang", "en", "Language to translate the text into(default english)")
 
 	flag.Parse()
-	numOfPages := 0
-	var fileSizes float64
-	if _, err := os.Stat(*dir); os.IsNotExist(err) == false {
-		allFiles, err := ioutil.ReadDir(*dir)
-		check(err)
 
-		for _, file := range allFiles {
-			if filepath.Ext(file.Name()) == ".txt" {
-				fileContent := readFile(file.Name())
-				fileSizes += float64(file.Size()) / float64(bytesize.KB)
-				translatedFileContent, err := translateText("en", string(fileContent))
-				check(err)
-
-				buffer := writeHTMLFile(translatedFileContent)
-
-				fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
-
-				createHTMLFile(buffer, fileName)
-				numOfPages = numOfPages + 1
-			}
-		}
-	} else {
-		fileContent := readFile(*fileName)
-		buffer := writeHTMLFile(string(fileContent))
-		fileName := strings.SplitN(*fileName, ".", 2)[0] + ".html"
-		createHTMLFile(buffer, fileName)
-		numOfPages = numOfPages + 1
+	if dir != "" {
+		fmt.Println(lang)
+		fmt.Println(dir)
+		numOfPages, fileSizes = makeMultipleHTMLfile(dir, lang)
+	} else if fileName != "" {
+		numOfPages, fileSizes = makeHTMLFile(fileName, lang)
+	} else if fileName == "" && dir == "" {
+		fmt.Printf("%s You must provide either a directory or a file!\n", color.Danger.Render("ERROR:"))
+		return
 	}
+
 	bold := color.Bold.Render
 	success := color.Success.Render
 	since := time.Since(start).Seconds()
