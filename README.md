@@ -60,16 +60,29 @@ If you get stuck on any step, be sure to print the output to `stdout`!
 
 
 ### v1.1 Requirements
- - [] Create 3 new .txt files for testing in the same directory as your project.
+ - [x] Create 3 new .txt files for testing in the same directory as your project.
  - [x] Add a new flag to the makesite command named dir.
  - [x] Use the flag to find all .txt files in the given directory. Print them to stdout.
  - [x] With the list of .txt files you found, generate an HTML page for each.
  - [x] Run ./makesite --dir=. to test in your local directory.
  - [x] Add, commit, and push to GitHub.
 
+ ### v1.2 Requirements
+ - [ ] Initialize Go modules in your project.
+ - [ ] Add any third party library to your project to enhance it's functionality. Some ideas you might consider include (CHOOSE ONLY ONE):
+    - [ ] Translating page content using Google Translate.
+    - [ ] Parse Markdown (.md) files and transform them into HTML. # through ###### should translate to through  elements.
+    - [ ] FILL IN THE BLANK: I will use the __________________________________ library. The documentation is located at __________________________________. My goal is to use it to __________________________________.
+ - [ ] Add, commit, and push to GitHub.
+
 #### Stretch Challenges
 
 - [ ] Use Bootstrap, or another CSS framework, to enhance the style and readability of your template. _Get creative! Writing your very own website generator is a great opportunity to broadcast your style, personality, and development preferences to the world!_
+- [ ] Recursively find all .txt files in the given directory, as well as it's subdirectories. Print them to stdout to make sure. Generate an HTML page for each.
+- [ ] When your program finishes, print: Success! Generated 5 pages. The Success! substring must be bold green, and the count (5) must be bold.
+- [ ] Modify the success message to read: Success! Generated 5 pages (18.2kB total). Calculate the total by summing the size of each HTML file, then converting the total to kilobytes. Always return one significant digit after the decimal point.
+- [ ] Determine how long it took to execute your static site generator. Modify the success message to read: Success! Generated 5 pages (18.2kB total) in 3.25 seconds. Always return two significant digits after the decimal point.
+- [ ] Test your solutions to these stretch challenges on many different directories containing .txt files. Are there any ways to make your code faster?
 
 ## Resources
 

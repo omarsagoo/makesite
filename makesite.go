@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"cloud.google.com/go/translate"
+	"golang.org/x/text/language"
 )
 
 type blogEntry struct {
@@ -18,6 +22,31 @@ type blogEntry struct {
 
 type allBlog struct {
 	List []blogEntry
+}
+
+func translateText(targetLanguage, text string) (string, error) {
+	// text := "The Go Gopher is cute"
+	ctx := context.Background()
+
+	lang, err := language.Parse(targetLanguage)
+	if err != nil {
+		return "", fmt.Errorf("language.Parse: %v", err)
+	}
+
+	client, err := translate.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	resp, err := client.Translate(ctx, []string{text}, lang, nil)
+	if err != nil {
+		return "", fmt.Errorf("Translate: %v", err)
+	}
+	if len(resp) == 0 {
+		return "", fmt.Errorf("Translate returned empty response to text: %s", text)
+	}
+	return resp[0].Text, nil
 }
 
 func readFile(file string) []byte {
@@ -84,7 +113,10 @@ func main() {
 			if filepath.Ext(file.Name()) == ".txt" {
 				fileContent := readFile(file.Name())
 
-				buffer := writeHTMLFile(string(fileContent))
+				translatedFileContent, err := translateText("en", string(fileContent))
+				check(err)
+
+				buffer := writeHTMLFile(translatedFileContent)
 
 				fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
 
