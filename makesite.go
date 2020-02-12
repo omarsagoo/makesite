@@ -179,7 +179,7 @@ func makeHTMLFile(fileName, lang string) (int, float64) {
 		translatedFileContent := markdown.ToHTML([]byte(translatedFileContent), p, renderer)
 		buffer := writeHTMLFile(string(translatedFileContent))
 
-		fileName = strings.Replace(file.Name(), ".txt", ".html", 1)
+		fileName = strings.Replace(file.Name(), ".md", ".html", 1)
 
 		createHTMLFile(buffer, fileName)
 
