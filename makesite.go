@@ -10,9 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"cloud.google.com/go/translate"
+	"github.com/inhies/go-bytesize"
 	"golang.org/x/text/language"
+	"gopkg.in/gookit/color.v1"
 )
 
 type blogEntry struct {
@@ -24,6 +27,13 @@ type allBlog struct {
 	List []blogEntry
 }
 
+//
+func timeTrack(start time.Time) time.Duration {
+	elapsed := time.Since(start)
+	return elapsed
+}
+
+// Google API Golang snippet
 func translateText(targetLanguage, text string) (string, error) {
 	// text := "The Go Gopher is cute"
 	ctx := context.Background()
@@ -99,12 +109,14 @@ func createHTMLFile(buffer, filename string) bool {
 
 func main() {
 	// dir, fileName := flagParse()
+	start := time.Now()
 
 	dir := flag.String("dir", ".", "Name of the directory to save the File")
 	fileName := flag.String("file", "first-post.txt", "name of file to write to html")
 
 	flag.Parse()
-
+	numOfPages := 0
+	var fileSizes float64
 	if _, err := os.Stat(*dir); os.IsNotExist(err) == false {
 		allFiles, err := ioutil.ReadDir(*dir)
 		check(err)
@@ -112,7 +124,7 @@ func main() {
 		for _, file := range allFiles {
 			if filepath.Ext(file.Name()) == ".txt" {
 				fileContent := readFile(file.Name())
-
+				fileSizes += float64(file.Size()) / float64(bytesize.KB)
 				translatedFileContent, err := translateText("en", string(fileContent))
 				check(err)
 
@@ -121,13 +133,18 @@ func main() {
 				fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
 
 				createHTMLFile(buffer, fileName)
+				numOfPages = numOfPages + 1
 			}
 		}
 	} else {
 		fileContent := readFile(*fileName)
-		fmt.Println("asga")
 		buffer := writeHTMLFile(string(fileContent))
 		fileName := strings.SplitN(*fileName, ".", 2)[0] + ".html"
 		createHTMLFile(buffer, fileName)
+		numOfPages = numOfPages + 1
 	}
+	bold := color.Bold.Render
+	success := color.Success.Render
+	since := time.Since(start).Seconds()
+	fmt.Printf("%s You generated %s pages in %.2f seconds. (%.1fkB total)\n", success("Success!"), bold(numOfPages), since, fileSizes)
 }
