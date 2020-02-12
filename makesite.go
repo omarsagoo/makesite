@@ -5,17 +5,21 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"cloud.google.com/go/translate"
 	"github.com/inhies/go-bytesize"
 	"golang.org/x/text/language"
 	"gopkg.in/gookit/color.v1"
+
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 type blogEntry struct {
@@ -54,7 +58,7 @@ func translateText(targetLanguage, text string) (string, error) {
 }
 
 type data struct {
-	Content string
+	Content template.HTML
 }
 
 func check(err error) {
@@ -64,17 +68,18 @@ func check(err error) {
 }
 
 func writeHTMLFile(fileContent string) string {
-	paths := []string{
-		"template.tmpl",
-	}
+	// paths := []string{
+	// 	"template.tmpl",
+	// }
 
 	buffer := new(bytes.Buffer)
 
-	Data := data{string(fileContent)}
+	Data := data{Content: template.HTML(fileContent)}
 
-	tmpl := template.Must(template.New("template.tmpl").ParseFiles(paths...))
+	tmpl, err := template.ParseFiles("template.tmpl")
+	check(err)
 
-	err := tmpl.Execute(buffer, Data)
+	err = tmpl.Execute(buffer, Data)
 	check(err)
 
 	return buffer.String()
@@ -119,6 +124,30 @@ func makeMultipleHTMLfile(dir, lang string) (int, float64) {
 
 			fileSizes += float64(file.Size()) / float64(bytesize.KB)
 			numOfPages = numOfPages + 1
+		} else if filepath.Ext(file.Name()) == ".md" {
+			extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+			p := parser.NewWithExtensions(extensions)
+
+			htmlFlags := html.CommonFlags | html.HrefTargetBlank
+			opts := html.RendererOptions{Flags: htmlFlags}
+			renderer := html.NewRenderer(opts)
+
+			fileContent, err := ioutil.ReadFile(dir + "/" + file.Name())
+			check(err)
+
+			translatedFileContent, err := translateText(lang, string(fileContent))
+			check(err)
+
+			html := markdown.ToHTML([]byte(translatedFileContent), p, renderer)
+
+			buffer := writeHTMLFile(string(html))
+
+			fileName := strings.SplitN(file.Name(), ".", 2)[0] + ".html"
+
+			createHTMLFile(buffer, fileName)
+
+			fileSizes += float64(file.Size()) / float64(bytesize.KB)
+			numOfPages = numOfPages + 1
 		}
 	}
 	return numOfPages, fileSizes
@@ -131,7 +160,7 @@ func makeHTMLFile(fileName, lang string) (int, float64) {
 	file, err := os.Lstat(fileName)
 	check(err)
 
-	fileContent, err := ioutil.ReadFile(file.Name())
+	fileContent, err := ioutil.ReadFile(fileName)
 	check(err)
 
 	fileSizes += float64(file.Size()) / float64(bytesize.KB)
@@ -139,9 +168,29 @@ func makeHTMLFile(fileName, lang string) (int, float64) {
 	translatedFileContent, err := translateText(lang, string(fileContent))
 	check(err)
 
+	if filepath.Ext(file.Name()) == ".md" {
+		extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+		p := parser.NewWithExtensions(extensions)
+
+		htmlFlags := html.CommonFlags | html.HrefTargetBlank
+		opts := html.RendererOptions{Flags: htmlFlags}
+		renderer := html.NewRenderer(opts)
+
+		translatedFileContent := markdown.ToHTML([]byte(translatedFileContent), p, renderer)
+		buffer := writeHTMLFile(string(translatedFileContent))
+
+		fileName = strings.Replace(file.Name(), ".txt", ".html", 1)
+
+		createHTMLFile(buffer, fileName)
+
+		numOfPages = numOfPages + 1
+
+		return numOfPages, fileSizes
+	}
+
 	buffer := writeHTMLFile(translatedFileContent)
 
-	fileName = strings.SplitN(fileName, ".", 2)[0] + ".html"
+	fileName = strings.Replace(file.Name(), ".txt", ".html", 1)
 
 	createHTMLFile(buffer, fileName)
 
@@ -165,8 +214,6 @@ func main() {
 	flag.Parse()
 
 	if dir != "" {
-		fmt.Println(lang)
-		fmt.Println(dir)
 		numOfPages, fileSizes = makeMultipleHTMLfile(dir, lang)
 	} else if fileName != "" {
 		numOfPages, fileSizes = makeHTMLFile(fileName, lang)

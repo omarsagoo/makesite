@@ -71,7 +71,7 @@ If you get stuck on any step, be sure to print the output to `stdout`!
  - [x] Initialize Go modules in your project.
  - [x] Add any third party library to your project to enhance it's functionality. Some ideas you might consider include (CHOOSE ONLY ONE):
     - [x] Translating page content using Google Translate.
-    - [ ] Parse Markdown (.md) files and transform them into HTML. # through ###### should translate to through  elements.
+    - [x] Parse Markdown (.md) files and transform them into HTML. # through ###### should translate to through  elements.
     - [x] I will use the Google Translate library. The documentation is located at https://cloud.google.com/translate/docs/apis. My goal is to use it to make sure all the text is in english.
  - [x] Add, commit, and push to GitHub.
 
