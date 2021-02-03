@@ -26,7 +26,7 @@ func main() {
 	if dir != "" {
 		fileSizes = blog.MakeMultipleHTMLfile(dir, lang, &numOfPages)
 	} else if fileName != "" {
-		// fileSizes = blog.MakeHTMLFile(fileName, lang)
+		fileSizes = blog.MakeHTMLFile(fileName, lang, &numOfPages)
 	} else if fileName == "" && dir == "" {
 		fmt.Printf("%s You must provide either a directory or a file!\n", color.Danger.Render("ERROR:"))
 		return

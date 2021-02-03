@@ -62,7 +62,7 @@ func MakeMultipleHTMLfile(dir, lang string, numOfPages *int) float64 {
 }
 
 // MakeHTMLFile will make a new HTML file
-func MakeHTMLFile(fileName, lang string) float64 {
+func MakeHTMLFile(fileName, lang string, numOfPages *int) float64 {
 	var fileSizes float64
 
 	file, err := os.Lstat(fileName)
@@ -84,13 +84,10 @@ func MakeHTMLFile(fileName, lang string) float64 {
 		opts := html.RendererOptions{Flags: htmlFlags}
 		renderer := html.NewRenderer(opts)
 
-		translatedFileContent := markdown.ToHTML([]byte(translatedFileContent), p, renderer)
-		writeHTMLFile(file.Name(), string(translatedFileContent))
-
-		return fileSizes
+		translatedFileContent = string(markdown.ToHTML([]byte(translatedFileContent), p, renderer))
 	}
 
 	writeHTMLFile(file.Name(), translatedFileContent)
-
+	*numOfPages++
 	return fileSizes
 }
