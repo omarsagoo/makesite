@@ -1,20 +1,20 @@
 package blog
 
 import (
-	"bytes"
 	"html/template"
+	"os"
+	"strings"
 )
 
-func writeHTMLFile(fileContent string) string {
-	buffer := new(bytes.Buffer)
+func writeHTMLFile(filename, fileContent string) {
+	newFile, err := os.Create("html_SSG_files/" + strings.SplitN(filename, ".", 2)[0] + ".html")
+	check(err)
 
 	Data := Entry{Content: template.HTML(fileContent)}
 
 	tmpl, err := template.ParseFiles("template.tmpl")
 	check(err)
 
-	err = tmpl.Execute(buffer, Data)
+	err = tmpl.Execute(newFile, Data)
 	check(err)
-
-	return buffer.String()
 }
