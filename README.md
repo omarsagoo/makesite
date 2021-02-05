@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/omarsagoo/makesite)](https://goreportcard.com/report/github.com/omarsagoo/makesite)
 # 🔗 makesite
 
 _Create your own custom Static Site Generator (like [Jekyll](https://jekyllrb.com/) or [Hugo](https://gohugo.io/)) by cloning and fulfilling the requirements in this repo!_
